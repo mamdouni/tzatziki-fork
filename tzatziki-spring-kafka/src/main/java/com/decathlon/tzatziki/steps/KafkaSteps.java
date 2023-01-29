@@ -10,13 +10,33 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Semaphore;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
-import org.apache.kafka.clients.admin.*;
+import org.apache.kafka.clients.admin.Admin;
+import org.apache.kafka.clients.admin.ConsumerGroupDescription;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.MemberDescription;
+import org.apache.kafka.clients.admin.RemoveMembersFromConsumerGroupOptions;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
@@ -37,20 +57,16 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 
-import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Semaphore;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
 import static com.decathlon.tzatziki.kafka.KafkaInterceptor.offsets;
 import static com.decathlon.tzatziki.utils.Asserts.awaitUntil;
 import static com.decathlon.tzatziki.utils.Asserts.awaitUntilAsserted;
 import static com.decathlon.tzatziki.utils.Comparison.COMPARING_WITH;
 import static com.decathlon.tzatziki.utils.Guard.GUARD;
-import static com.decathlon.tzatziki.utils.Patterns.*;
+import static com.decathlon.tzatziki.utils.Patterns.A;
+import static com.decathlon.tzatziki.utils.Patterns.A_USER;
+import static com.decathlon.tzatziki.utils.Patterns.THAT;
+import static com.decathlon.tzatziki.utils.Patterns.VARIABLE;
+import static com.decathlon.tzatziki.utils.Patterns.VARIABLE_PATTERN;
 import static com.decathlon.tzatziki.utils.Unchecked.unchecked;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Locale.ROOT;
@@ -359,7 +375,7 @@ public class KafkaSteps {
                 .stream()
                 .map(avroRecord -> {
                     ProducerRecord<String, GenericRecord> producerRecord = mapToAvroRecord(schema, topic, avroRecord);
-                    return avroKafkaTemplate.send(producerRecord).completable().join();
+                    return avroKafkaTemplate.send(producerRecord).join();
                 }).collect(Collectors.toList());
         avroKafkaTemplate.flush();
         return messages;
@@ -413,7 +429,7 @@ public class KafkaSteps {
     private List<SendResult<String, ?>> publishJson(String topic, List<Map<String, Object>> records) {
         List<SendResult<String, ?>> messages = records
                 .stream()
-                .map(jsonRecord -> jsonKafkaTemplate.send(mapToJsonRecord(topic, jsonRecord)).completable().join()).collect(Collectors.toList());
+                .map(jsonRecord -> jsonKafkaTemplate.send(mapToJsonRecord(topic, jsonRecord)).join()).collect(Collectors.toList());
         jsonKafkaTemplate.flush();
         return messages;
     }

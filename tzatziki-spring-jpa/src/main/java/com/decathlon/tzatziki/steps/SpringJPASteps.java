@@ -1,20 +1,18 @@
 package com.decathlon.tzatziki.steps;
 
-import com.decathlon.tzatziki.utils.*;
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
+import com.decathlon.tzatziki.utils.Comparison;
+import com.decathlon.tzatziki.utils.DatabaseCleaner;
+import com.decathlon.tzatziki.utils.Guard;
+import com.decathlon.tzatziki.utils.InsertionMode;
+import com.decathlon.tzatziki.utils.JacksonMapper;
+import com.decathlon.tzatziki.utils.Mapper;
+import com.decathlon.tzatziki.utils.TypeParser;
+import com.decathlon.tzatziki.utils.Types;
+import com.fasterxml.jackson.datatype.hibernate5.jakarta.Hibernate5JakartaModule;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
-import org.apache.commons.lang3.reflect.TypeUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-
-import javax.persistence.Table;
-import javax.sql.DataSource;
+import jakarta.persistence.Table;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.List;
@@ -23,11 +21,21 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import javax.sql.DataSource;
+import org.apache.commons.lang3.reflect.TypeUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
 import static com.decathlon.tzatziki.utils.Comparison.COMPARING_WITH;
 import static com.decathlon.tzatziki.utils.Guard.GUARD;
 import static com.decathlon.tzatziki.utils.InsertionMode.INSERTION_MODE;
-import static com.decathlon.tzatziki.utils.Patterns.*;
+import static com.decathlon.tzatziki.utils.Patterns.THAT;
+import static com.decathlon.tzatziki.utils.Patterns.TYPE;
+import static com.decathlon.tzatziki.utils.Patterns.VARIABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SpringJPASteps {
@@ -35,7 +43,7 @@ public class SpringJPASteps {
     static {
         DynamicTransformers.register(Type.class, TypeParser::parse);
         DynamicTransformers.register(InsertionMode.class, InsertionMode::parse);
-        JacksonMapper.with(objectMapper -> objectMapper.registerModule(new Hibernate5Module()));
+        JacksonMapper.with(objectMapper -> objectMapper.registerModule(new Hibernate5JakartaModule()));
     }
 
     public static boolean autoclean = true;
